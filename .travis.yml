@@ -19,9 +19,7 @@ before_script: java -version
 script: ./mvnw install
 deploy:
   provider: releases
-  api_key:
-    secure: ${GITHUB_OAUTH_ENCRYPTED_TOKEN}
+  api_key: ${GITHUB_OAUTH_TOKEN}
   file: ./vertx-starter-main/target/vertx-starter-main-${TRAVIS_TAG}-fat.jar
   on:
     repo: danielpetisme/vertx-starter
-    tags: true
