@@ -22,4 +22,4 @@ deploy:
   api_key: ${GITHUB_OAUTH_TOKEN}
   file: ./vertx-starter-main/target/vertx-starter-main-${TRAVIS_TAG}-fat.jar
   on:
-    repo: danielpetisme/vertx-starter
+    tags: true
