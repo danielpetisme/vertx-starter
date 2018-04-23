@@ -13,7 +13,7 @@
         "vertx-unit"
       ]
     },
-    "dependencies.path": "./dependencies.json"
+    "dependencies.path": "/Users/daniel/workspace/vertx-starter/dependencies.json"
   },
   "generator": {
     "temp.dir": "."

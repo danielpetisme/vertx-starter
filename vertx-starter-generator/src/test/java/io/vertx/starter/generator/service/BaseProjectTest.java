@@ -33,7 +33,7 @@ public abstract class BaseProjectTest {
   @Before
   public void beforeEach(TestContext context) {
     vertx = Vertx.vertx();
-    templateService = new TemplateService(vertx, new FileTemplateLoader("src/main/resources/templates"));
+    //templateService = new TemplateService(vertx, new FileTemplateLoader("src/main/resources/templates"));
   }
 
   @After

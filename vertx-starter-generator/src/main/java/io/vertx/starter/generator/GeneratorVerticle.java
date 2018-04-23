@@ -22,36 +22,57 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.starter.generator.handler.ProjectCreatedHandler;
+import io.vertx.starter.generator.handler.ProjectRequestedHandler;
+import io.vertx.starter.generator.io.FutureFileSystem;
+import io.vertx.starter.generator.io.impl.ClassPathSourceProvider;
 import io.vertx.starter.generator.service.ArchiveService;
 import io.vertx.starter.generator.service.ProjectGeneratorService;
-import io.vertx.starter.generator.service.StarterService;
 import io.vertx.starter.generator.service.TemplateService;
 
 public class GeneratorVerticle extends AbstractVerticle {
 
   public static final String TEMPLATE_DIR = "/templates";
+  public static final String PROJECTS_ROOT_DIR = "/projects/core";
+
   private final Logger log = LoggerFactory.getLogger(GeneratorVerticle.class);
 
-  String tempDir() {
+  private String tempDir() {
     return config().getString("temp.dir", System.getProperty("java.io.tmpdir"));
+  }
+
+  private String projectsDir() {
+    return config().getString("projects.dir", PROJECTS_ROOT_DIR);
   }
 
   @Override
   public void start(Future<Void> startFuture) throws Exception {
-    TemplateLoader loader = new ClassPathTemplateLoader(TEMPLATE_DIR);
-    StarterService starter = new StarterService(vertx, tempDir());
-    ProjectGeneratorService generator = new ProjectGeneratorService(vertx, new TemplateService(vertx, loader));
-    ArchiveService archive = new ArchiveService(vertx);
+    String rootDir = tempDir();
+    FutureFileSystem fileSystem = new FutureFileSystem(vertx);
+    fileSystem
+      .mkdirs(rootDir)
+      .setHandler(ar -> {
+        if (ar.succeeded()) {
 
-    vertx.eventBus().<JsonObject>consumer("project.requested").handler(starter::starter);
-    vertx.eventBus().<JsonObject>consumer("generate").handler(generator::generate);
-    vertx.eventBus().<JsonObject>consumer("archive").handler(archive::archive);
-    vertx.eventBus().<JsonObject>consumer("project.created").handler(starter::clean);
+          TemplateLoader loader = new ClassPathTemplateLoader(TEMPLATE_DIR);
+          ProjectGeneratorService generatorService = new ProjectGeneratorService(new ClassPathSourceProvider(), fileSystem, new TemplateService(loader));
+          ArchiveService archiveService = new ArchiveService();
+          ProjectRequestedHandler projectRequestedHandler = new ProjectRequestedHandler(rootDir, generatorService, archiveService);
+          ProjectCreatedHandler projectCreatedHandler = new ProjectCreatedHandler(fileSystem);
 
-    log.info("\n----------------------------------------------------------\n\t" +
-        "{} is running!\n" +
-        "----------------------------------------------------------",
-      GeneratorVerticle.class.getSimpleName());
-    startFuture.complete();
+          vertx.eventBus().<JsonObject>consumer("project.requested").handler(projectRequestedHandler::handle);
+          vertx.eventBus().<String>consumer("project.created").handler(projectCreatedHandler::handle);
+
+          log.info("\n----------------------------------------------------------\n\t" +
+              "{} is running!\n" +
+              "----------------------------------------------------------",
+            GeneratorVerticle.class.getSimpleName());
+
+          startFuture.complete();
+        } else {
+          log.error("Generator will shutdown...");
+          startFuture.fail(ar.cause());
+        }
+      });
   }
 }

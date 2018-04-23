@@ -25,6 +25,9 @@ import io.vertx.starter.analytics.AnalyticsVerticle;
 import io.vertx.starter.generator.GeneratorVerticle;
 import io.vertx.starter.web.WebVerticle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static io.vertx.core.Future.future;
 import static java.util.Arrays.asList;
 
@@ -34,26 +37,30 @@ public class MainVerticle extends AbstractVerticle {
 
   @Override
   public void start(Future<Void> startFuture) throws Exception {
+    List<Future> futures = new ArrayList<>();
     Future<String> generatorFuture = future();
     vertx.deployVerticle(
       GeneratorVerticle.class.getName(),
       new DeploymentOptions().setConfig(config().getJsonObject("generator")),
       generatorFuture
     );
-    Future<String> analyticsFuture = future();
-    vertx.deployVerticle(
-      AnalyticsVerticle.class.getName(),
-      new DeploymentOptions().setConfig(config().getJsonObject("analytics")),
-      analyticsFuture
-    );
+    futures.add(generatorFuture);
+//    Future<String> analyticsFuture = future();
+//    vertx.deployVerticle(
+//      AnalyticsVerticle.class.getName(),
+//      new DeploymentOptions().setConfig(config().getJsonObject("analytics")),
+//      analyticsFuture
+//    );
+//    futures.add(analyticsFuture);
     Future<String> webFuture = future();
     vertx.deployVerticle(
       WebVerticle.class.getName(),
       new DeploymentOptions().setConfig(config().getJsonObject("web")),
       webFuture
     );
+    futures.add(webFuture);
 
-    CompositeFuture.all(asList(generatorFuture, analyticsFuture, webFuture)).setHandler(ar -> {
+    CompositeFuture.all(futures).setHandler(ar -> {
       if (ar.failed()) {
         log.error("Vertx starter failed to start: {}", ar.cause().getMessage());
         ar.cause().printStackTrace();
