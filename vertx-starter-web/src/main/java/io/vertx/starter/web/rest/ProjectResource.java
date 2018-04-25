@@ -41,16 +41,23 @@ public class ProjectResource {
     this.projectService = projectService;
   }
 
+  private String contentTypeHeader(String format) {
+    if(format.equalsIgnoreCase("zip")) {
+      return "application/zip";
+    }
+    return "";
+  }
+
   public void create(RoutingContext rc) {
     JsonObject projectRequest = buildProjectRequest(rc.request());
     projectService.create(projectRequest, reply -> {
       if (reply.succeeded()) {
-        String archivePath = reply.result();
-        File archive = new File(archivePath);
-        String archiveName = projectRequest.getString("artifactId");
+        JsonObject projectCreated = reply.result();
+        File archive = new File(projectCreated.getString("archivePath"));
+        String archiveName = projectCreated.getString("artifactId");
         rc.response()
           .setStatusCode(HTTP_OK)
-          .putHeader("Content-Type", "application/zip")
+          .putHeader("Content-Type", contentTypeHeader(projectCreated.getString("format")))
           .putHeader("Content-Disposition", "attachment; filename=" + archiveName + ".zip")
           .sendFile(archive.getAbsolutePath(), onFileSent -> {
             if (onFileSent.failed()) {

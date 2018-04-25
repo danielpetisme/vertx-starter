@@ -18,24 +18,37 @@ package io.vertx.starter.generator.service;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.starter.generator.domain.Format;
+import io.vertx.starter.generator.model.Format;
+import io.vertx.starter.generator.model.Project;
 import org.zeroturnaround.zip.ZipUtil;
 
-import java.io.File;
+import java.nio.file.Path;
+
+import static java.lang.String.format;
 
 public class ArchiveService {
 
   private final Logger log = LoggerFactory.getLogger(ArchiveService.class);
 
-  public Future<String> archive(String rootDir, Format format) {
-    return zip (rootDir);
+  public static final String DEFAULT_ARCHIVE_NAME = "archive";
+
+  public Future<Path> archive(Project project) {
+    Path archivePath = archivePath(project.getBaseDir(), project.getFormat());
+    switch (project.getFormat()) {
+      default:
+        return zip(project.getTargetDir(), archivePath);
+    }
   }
 
-  private Future<String> zip(String rootDir) {
+  private Path archivePath(Path targetDir, Format format) {
+    return targetDir.resolve(format("%s.%s", DEFAULT_ARCHIVE_NAME, format.getFileExtension()));
+  }
+
+  private Future<Path> zip(Path sourceDir, Path archivePath) {
+    log.debug("Generating archive from {} to {}", sourceDir, archivePath);
     Future future = Future.future();
-    String archive = rootDir + "/archive.zip";
-    ZipUtil.pack(new File(rootDir), new File(archive), false);
-    future.complete(archive);
+    ZipUtil.pack(sourceDir.toFile(),archivePath.toFile(), true);
+    future.complete(archivePath);
     return future;
   }
 }

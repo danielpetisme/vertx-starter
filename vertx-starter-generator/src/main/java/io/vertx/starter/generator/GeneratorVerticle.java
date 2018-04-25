@@ -16,24 +16,23 @@
 package io.vertx.starter.generator;
 
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
-import com.github.jknack.handlebars.io.TemplateLoader;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.starter.generator.engine.ProjectGeneratorBuilder;
+import io.vertx.starter.generator.engine.ProjectGeneratorImpl;
 import io.vertx.starter.generator.handler.ProjectCreatedHandler;
 import io.vertx.starter.generator.handler.ProjectRequestedHandler;
-import io.vertx.starter.generator.io.FutureFileSystem;
+import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.io.impl.ClassPathSourceProvider;
 import io.vertx.starter.generator.service.ArchiveService;
 import io.vertx.starter.generator.service.ProjectGeneratorService;
-import io.vertx.starter.generator.service.TemplateService;
+
+import java.nio.file.Paths;
 
 public class GeneratorVerticle extends AbstractVerticle {
-
-  public static final String TEMPLATE_DIR = "/templates";
-  public static final String PROJECTS_ROOT_DIR = "/projects/core";
 
   private final Logger log = LoggerFactory.getLogger(GeneratorVerticle.class);
 
@@ -41,27 +40,33 @@ public class GeneratorVerticle extends AbstractVerticle {
     return config().getString("temp.dir", System.getProperty("java.io.tmpdir"));
   }
 
-  private String projectsDir() {
-    return config().getString("projects.dir", PROJECTS_ROOT_DIR);
-  }
-
   @Override
   public void start(Future<Void> startFuture) throws Exception {
     String rootDir = tempDir();
-    FutureFileSystem fileSystem = new FutureFileSystem(vertx);
+    FileSystem fileSystem = FileSystem.fileSystem(vertx);
+
+    ProjectGeneratorImpl defaultGenerator = new ProjectGeneratorBuilder()
+      .setDefaultPackage("io.vertx.example")
+      .setModelDir("/projects")
+      .setDefaultModel("basic")
+      .setFileSystem(fileSystem)
+      .setFileProvider(new ClassPathSourceProvider())
+      .setTemplateLoader(new ClassPathTemplateLoader("/templates"))
+      .build();
+
+
     fileSystem
-      .mkdirs(rootDir)
+      .mkdirs(Paths.get(rootDir))
       .setHandler(ar -> {
         if (ar.succeeded()) {
-
-          TemplateLoader loader = new ClassPathTemplateLoader(TEMPLATE_DIR);
-          ProjectGeneratorService generatorService = new ProjectGeneratorService(new ClassPathSourceProvider(), fileSystem, new TemplateService(loader));
+          ProjectGeneratorService generatorService = new ProjectGeneratorService(defaultGenerator);
           ArchiveService archiveService = new ArchiveService();
+
           ProjectRequestedHandler projectRequestedHandler = new ProjectRequestedHandler(rootDir, generatorService, archiveService);
           ProjectCreatedHandler projectCreatedHandler = new ProjectCreatedHandler(fileSystem);
 
           vertx.eventBus().<JsonObject>consumer("project.requested").handler(projectRequestedHandler::handle);
-          vertx.eventBus().<String>consumer("project.created").handler(projectCreatedHandler::handle);
+          vertx.eventBus().<JsonObject>consumer("project.created").handler(projectCreatedHandler::handle);
 
           log.info("\n----------------------------------------------------------\n\t" +
               "{} is running!\n" +

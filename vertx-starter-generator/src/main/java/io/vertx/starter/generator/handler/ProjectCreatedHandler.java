@@ -2,27 +2,25 @@ package io.vertx.starter.generator.handler;
 
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
-import io.vertx.starter.generator.io.FutureFileSystem;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
+import io.vertx.starter.generator.model.Project;
+import io.vertx.starter.generator.io.FileSystem;
 
 public class ProjectCreatedHandler {
 
-  private final FutureFileSystem fileSystem;
+  private final Logger log = LoggerFactory.getLogger(ProjectCreatedHandler.class);
 
-  public ProjectCreatedHandler(FutureFileSystem fileSystem) {
+  private final FileSystem fileSystem;
+
+  public ProjectCreatedHandler(FileSystem fileSystem) {
     this.fileSystem = fileSystem;
   }
 
-  public void handle(Message<String> message) {
-    String rootDir = message.body();
-    fileSystem.deleteRecursive(rootDir);
-//    String metadata = message.body();
-//    String rootDir = metadata.getString("rootDir");
-//    vertx.fileSystem().deleteRecursive(rootDir, true, ar -> {
-//      if (ar.failed()) {
-//        log.error("Impossible to delete temp directory {}: {}", rootDir, ar.cause().getMessage());
-//      } else {
-//        log.debug("Temp directory {} deleted", rootDir);
-//      }
-//    });
+  public void handle(Message<JsonObject> message) {
+    Project project = message.body().mapTo(Project.class);
+    log.debug("Cleaning project {}", project);
+    fileSystem
+      .deleteRecursive(project.getBaseDir());
   }
 }

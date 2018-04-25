@@ -73,10 +73,10 @@
     </build>
 
     <dependencies>
-        {{#each dependencies as |dependency|}}
+        {{#each dependencies}}
             <dependency>
                 <groupId>io.vertx</groupId>
-                <artifactId>{{dependency}}</artifactId>
+                <artifactId>{{this}}</artifactId>
                 <version>${vertx.version}</version>
             </dependency>
         {{/each}}
