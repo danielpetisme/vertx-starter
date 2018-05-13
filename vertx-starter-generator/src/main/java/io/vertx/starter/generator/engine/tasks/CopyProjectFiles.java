@@ -4,7 +4,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.starter.generator.engine.ProjectGeneratorTask;
 import io.vertx.starter.generator.engine.SourceType;
-import io.vertx.starter.generator.io.FileProvider;
 import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.model.Project;
 
@@ -15,17 +14,14 @@ public abstract class CopyProjectFiles implements ProjectGeneratorTask {
 
   private final Logger log = LoggerFactory.getLogger(CopyProjectFiles.class);
 
-  protected final FileProvider fileProvider;
   protected final FileSystem fileSystem;
   protected final String modelDir;
   protected final SourceType sourceType;
 
-  public CopyProjectFiles(FileProvider fileProvider, FileSystem fileSystem, String modelDir, SourceType sourceType) {
-    requireNonNull(fileProvider);
+    public CopyProjectFiles(FileSystem fileSystem, String modelDir, SourceType sourceType) {
     requireNonNull(fileSystem);
     requireNonNull(modelDir);
     requireNonNull(sourceType);
-    this.fileProvider = fileProvider;
     this.fileSystem = fileSystem;
     this.modelDir = modelDir;
     this.sourceType = sourceType;

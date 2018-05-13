@@ -54,10 +54,11 @@ public class ProjectGeneratorService {
         .render("build.gradle", "build.gradle")
         .render("settings.gradle", "settings.gradle");
     }
-
+      generator
+          .processMainSources(project);
     generator.copySources();
 
-    return generator.generate(project);
+      return generator.generate();
   }
 }
 

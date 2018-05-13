@@ -41,7 +41,7 @@ public class RenderTemplate implements ProjectGeneratorTask {
     log.debug("Rendering {} to {}", template, destination);
     requireNonNull(project);
     return render(template, project)
-      .compose(content -> fileSystem.writeFile(project.getTargetDir().resolve(destination), Buffer.buffer(content)));
+        .compose(content -> fileSystem.writeFile(project.getOutputDir().resolve(destination), Buffer.buffer(content)));
   }
 
   private Future<String> render(String template, Project project) {

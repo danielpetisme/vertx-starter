@@ -1,31 +1,15 @@
 package io.vertx.starter.generator.engine;
 
 import com.github.jknack.handlebars.io.TemplateLoader;
-import io.vertx.starter.generator.io.FileProvider;
 import io.vertx.starter.generator.io.FileSystem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class ProjectGeneratorBuilder {
 
-  private FileProvider fileProvider;
   private TemplateLoader templateLoader;
   private FileSystem fileSystem;
   private String modelDir;
   private String defaultModel;
   private String defaultPackage;
-
-  private List<ProjectGeneratorTask> tasks = new ArrayList<>();
-
-  public FileProvider getFileProvider() {
-    return fileProvider;
-  }
-
-  public ProjectGeneratorBuilder setFileProvider(FileProvider fileProvider) {
-    this.fileProvider = fileProvider;
-    return this;
-  }
 
   public TemplateLoader getTemplateLoader() {
     return templateLoader;
@@ -75,7 +59,6 @@ public final class ProjectGeneratorBuilder {
 
   public ProjectGeneratorImpl build() {
     return new ProjectGeneratorImpl(
-      this.fileProvider,
       this.templateLoader,
       this.fileSystem,
       this.modelDir,

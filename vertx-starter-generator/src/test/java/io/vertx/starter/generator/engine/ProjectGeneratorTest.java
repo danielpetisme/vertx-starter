@@ -4,7 +4,6 @@ import com.github.jknack.handlebars.io.TemplateLoader;
 import io.vertx.core.Vertx;
 import io.vertx.junit5.VertxExtension;
 import io.vertx.junit5.VertxTestContext;
-import io.vertx.starter.generator.io.FileProvider;
 import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.model.Project;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,9 +23,6 @@ public class ProjectGeneratorTest {
   private static final String DEFAULT_PACKAGE = "CCCCCCCC";
 
   @Mock
-  private FileProvider fileProvider;
-
-  @Mock
   private TemplateLoader templateLoader;
 
   @Mock
@@ -38,7 +34,6 @@ public class ProjectGeneratorTest {
   public void beforeEach() {
     MockitoAnnotations.initMocks(this);
     generator = new ProjectGeneratorImpl(
-      fileProvider,
       templateLoader,
       fileSystem,
       MODEL_DIR,

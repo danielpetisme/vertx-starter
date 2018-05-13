@@ -15,7 +15,7 @@ public class ProjectAssert extends AbstractAssert<ProjectAssert, Project> {
 
   public ProjectAssert hasFile(String filename) {
     isNotNull();
-    if (!actual.getTargetDir().resolve(filename).toFile().exists()) {
+      if (!actual.getOutputDir().resolve(filename).toFile().exists()) {
       failWithMessage("Expected project file <%s> to exists", filename);
     }
     return this;

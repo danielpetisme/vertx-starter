@@ -3,122 +3,129 @@ package io.vertx.starter.generator.model;
 import java.nio.file.Path;
 import java.util.List;
 
+import static java.lang.String.format;
+
 public class Project {
 
-  private String model;
-  private String version;
-  private Format format;
-  private Language language;
-  private Build build;
-  private String groupId;
-  private String artifactId;
-  private List<String> dependencies;
-  private Path baseDir;
-  private Path targetDir;
-  private String archivePath;
+    private static final String MAIN_SOURCE_SET = "src/main/%s/**%s";
+    private static final String MAIN_RESOURCES = "src/main/resources";
+    private static final String TEST_SOURCE_SET = "src/test/%s/**%s";
+    private static final String TEST_RESOURCES = "src/test/resources";
 
-  public String getModel() {
-    return model;
-  }
+    private String model;
+    private String version;
+    private Format format;
+    private Language language;
+    private Build build;
+    private String groupId;
+    private String artifactId;
+    private List<String> dependencies;
+    private Path projectDir;
+    private Path outputDir;
+    private String archivePath;
 
-  public void setModel(String model) {
-    this.model = model;
-  }
+    public String getModel() {
+        return model;
+    }
 
-  public String getVersion() {
-    return version;
-  }
+    public void setModel(String model) {
+        this.model = model;
+    }
 
-  public void setVersion(String version) {
-    this.version = version;
-  }
+    public String getVersion() {
+        return version;
+    }
 
-  public Format getFormat() {
-    return format;
-  }
+    public void setVersion(String version) {
+        this.version = version;
+    }
 
-  public void setFormat(Format format) {
-    this.format = format;
-  }
+    public Format getFormat() {
+        return format;
+    }
 
-  public Language getLanguage() {
-    return language;
-  }
+    public void setFormat(Format format) {
+        this.format = format;
+    }
 
-  public void setLanguage(Language language) {
-    this.language = language;
-  }
+    public Language getLanguage() {
+        return language;
+    }
 
-  public Build getBuild() {
-    return build;
-  }
+    public void setLanguage(Language language) {
+        this.language = language;
+    }
 
-  public void setBuild(Build build) {
-    this.build = build;
-  }
+    public Build getBuild() {
+        return build;
+    }
 
-  public String getGroupId() {
-    return groupId;
-  }
+    public void setBuild(Build build) {
+        this.build = build;
+    }
 
-  public void setGroupId(String groupId) {
-    this.groupId = groupId;
-  }
+    public String getGroupId() {
+        return groupId;
+    }
 
-  public String getArtifactId() {
-    return artifactId;
-  }
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
-  public void setArtifactId(String artifactId) {
-    this.artifactId = artifactId;
-  }
+    public String getArtifactId() {
+        return artifactId;
+    }
 
-  public List<String> getDependencies() {
-    return dependencies;
-  }
+    public void setArtifactId(String artifactId) {
+        this.artifactId = artifactId;
+    }
 
-  public void setDependencies(List<String> dependencies) {
-    this.dependencies = dependencies;
-  }
+    public List<String> getDependencies() {
+        return dependencies;
+    }
 
-  public Path getBaseDir() {
-    return baseDir;
-  }
+    public void setDependencies(List<String> dependencies) {
+        this.dependencies = dependencies;
+    }
 
-  public void setBaseDir(Path baseDir) {
-    this.baseDir = baseDir;
-  }
+    public Path getProjectDir() {
+        return projectDir;
+    }
 
-  public Path getTargetDir() {
-    return targetDir;
-  }
+    public void setProjectDir(Path projectDir) {
+        this.projectDir = projectDir;
+    }
 
-  public void setTargetDir(Path targetDir) {
-    this.targetDir = targetDir;
-  }
+    public Path getOutputDir() {
+        return outputDir;
+    }
 
-  public String getArchivePath() {
-    return archivePath;
-  }
+    public void setOutputDir(Path outputDir) {
+        this.outputDir = outputDir;
+    }
 
-  public void setArchivePath(String archivePath) {
-    this.archivePath = archivePath;
-  }
+    public String getArchivePath() {
+        return archivePath;
+    }
 
-  @Override
-  public String toString() {
-    return "Project{" +
-      "model='" + model + '\'' +
-      ", version='" + version + '\'' +
-      ", format=" + format +
-      ", language=" + language +
-      ", build=" + build +
-      ", groupId='" + groupId + '\'' +
-      ", artifactId='" + artifactId + '\'' +
-      ", dependencies=" + dependencies +
-      ", baseDir=" + baseDir +
-      ", targetDir=" + targetDir +
-      ", archivePath='" + archivePath + '\'' +
-      '}';
-  }
+    public void setArchivePath(String archivePath) {
+        this.archivePath = archivePath;
+    }
+
+    public String getMainSourceSet() {
+        return format(MAIN_SOURCE_SET, language.getName(), language.getExtension());
+    }
+
+    public String getMainResources() {
+        return MAIN_RESOURCES;
+    }
+
+    public String getTestSourceSet() {
+        return format(TEST_SOURCE_SET, language.getName(), language.getExtension());
+    }
+
+    public String getTestResources() {
+        return TEST_RESOURCES;
+    }
+
 }

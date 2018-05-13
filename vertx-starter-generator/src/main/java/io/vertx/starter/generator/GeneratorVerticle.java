@@ -26,7 +26,6 @@ import io.vertx.starter.generator.engine.ProjectGeneratorImpl;
 import io.vertx.starter.generator.handler.ProjectCreatedHandler;
 import io.vertx.starter.generator.handler.ProjectRequestedHandler;
 import io.vertx.starter.generator.io.FileSystem;
-import io.vertx.starter.generator.io.impl.ClassPathSourceProvider;
 import io.vertx.starter.generator.service.ArchiveService;
 import io.vertx.starter.generator.service.ProjectGeneratorService;
 
@@ -47,11 +46,8 @@ public class GeneratorVerticle extends AbstractVerticle {
 
     ProjectGeneratorImpl defaultGenerator = new ProjectGeneratorBuilder()
       .setDefaultPackage("io.vertx.example")
-      .setModelDir("/projects")
-      .setDefaultModel("basic")
       .setFileSystem(fileSystem)
-      .setFileProvider(new ClassPathSourceProvider())
-      .setTemplateLoader(new ClassPathTemplateLoader("/templates"))
+        .setTemplateLoader(new ClassPathTemplateLoader("/"))
       .build();
 
 

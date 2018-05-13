@@ -36,7 +36,7 @@ public class ArchiveService {
     Path archivePath = archivePath(project.getBaseDir(), project.getFormat());
     switch (project.getFormat()) {
       default:
-        return zip(project.getTargetDir(), archivePath);
+          return zip(project.getOutputDir(), archivePath);
     }
   }
 

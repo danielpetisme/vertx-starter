@@ -16,7 +16,7 @@ public interface FileSystem {
 
   Future<String> readFile(Path path);
 
-  Future<List<Path>> readDir(Path path);
+    Future<List<String>> readDir(Path path);
 
   Future<Path> writeFile(Path path, Buffer buffer);
 
