@@ -8,40 +8,50 @@ import io.vertx.core.Future;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.starter.generator.engine.ProjectGeneratorTask;
+import io.vertx.starter.generator.engine.Task;
 import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.model.Project;
 
 import java.io.IOException;
 
-import static java.util.Objects.requireNonNull;
+public class Render extends Task {
 
-public class RenderTemplate implements ProjectGeneratorTask {
-
-  private final Logger log = LoggerFactory.getLogger(RenderTemplate.class);
+    private final Logger log = LoggerFactory.getLogger(Render.class);
 
   private final FileSystem fileSystem;
   private final Handlebars handlebars;
-  private final String template;
-  private final String destination;
+    private String template;
+    private String destination;
 
-  public RenderTemplate(TemplateLoader templateLoader, FileSystem fileSystem, String template, String destination) {
-    requireNonNull(fileSystem);
-    requireNonNull(templateLoader);
-    requireNonNull(template);
-    requireNonNull(destination);
+    public Render(Project project, TemplateLoader templateLoader, FileSystem fileSystem) {
+        super(project);
     this.fileSystem = fileSystem;
     this.handlebars = new Handlebars(templateLoader);
-    this.template = template;
-    this.destination = destination;
   }
 
-  @Override
-  public Future execute(Project project) {
-    log.debug("Rendering {} to {}", template, destination);
-    requireNonNull(project);
-    return render(template, project)
-        .compose(content -> fileSystem.writeFile(project.getOutputDir().resolve(destination), Buffer.buffer(content)));
+    public String template() {
+        return template;
+    }
+
+    public Render template(String template) {
+        this.template = template;
+        return this;
+    }
+
+    public String destination() {
+        return destination;
+    }
+
+    public Render destination(String to) {
+        this.destination = destination;
+        return this;
+    }
+
+    @Override
+    public Future execute() {
+        log.debug("Rendering template {} to destination {}", template, destination);
+        return render(template, getProject())
+            .compose(content -> fileSystem.writeFile(getProject().getOutputDir().resolve(destination), Buffer.buffer(content)));
   }
 
   private Future<String> render(String template, Project project) {

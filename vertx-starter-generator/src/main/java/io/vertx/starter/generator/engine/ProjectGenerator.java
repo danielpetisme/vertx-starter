@@ -1,38 +1,26 @@
 package io.vertx.starter.generator.engine;
 
-import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
 import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.model.Project;
 
 public interface ProjectGenerator {
 
-    static ProjectGenerator defaultProjectGenerator(Vertx vertx) {
-        return new ProjectGeneratorBuilder()
-            .setDefaultPackage("io.vertx.example")
-            .setModelDir("projects")
-            .setDefaultModel("basic")
-            .setFileSystem(FileSystem.fileSystem(vertx))
-            .setTemplateLoader(new ClassPathTemplateLoader("/templates"))
-            .build();
+    static ProjectGenerator createProjectGenerator(FileSystem fileSystem, ProjectGeneratorConfiguration configuration) {
+        return new ProjectGeneratorImpl(fileSystem, configuration);
     }
 
-    Future<Project> generate(Project project);
-
-    ProjectGenerator copySources();
+    static ProjectGenerator createProjectGenerator(FileSystem fileSystem) {
+        return createProjectGenerator(fileSystem, new ProjectGeneratorConfiguration());
+    }
 
     ProjectGenerator copyFile(String source, String destination);
 
     ProjectGenerator render(String template, String destination);
 
-    ProjectGenerator copyMainSources();
+    ProjectGenerator processMainSources();
 
-    ProjectGenerator copyMainResources();
+    ProjectGenerator processTestSources();
 
-    ProjectGenerator copyTestSources();
-
-    ProjectGenerator copyTestResources();
-
-    ProjectGenerator processMainSources(Project project);
+    Future<Project> generate(Project project);
 }

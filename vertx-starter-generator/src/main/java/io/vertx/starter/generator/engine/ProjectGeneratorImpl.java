@@ -5,10 +5,9 @@ import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.starter.generator.engine.tasks.Copy;
-import io.vertx.starter.generator.engine.tasks.CopyDirectory;
 import io.vertx.starter.generator.engine.tasks.CopyFile;
-import io.vertx.starter.generator.engine.tasks.RenderTemplate;
+import io.vertx.starter.generator.engine.tasks.ProcessSources;
+import io.vertx.starter.generator.engine.tasks.Render;
 import io.vertx.starter.generator.io.FileSystem;
 import io.vertx.starter.generator.model.Project;
 
@@ -16,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
@@ -24,54 +24,51 @@ public class ProjectGeneratorImpl implements ProjectGenerator {
 
     private final Logger log = LoggerFactory.getLogger(ProjectGeneratorImpl.class);
 
-    private final TemplateLoader templateLoader;
+    private final TemplateLoader templateLoader = null;
     private final FileSystem fileSystem;
+    private final List<Function<Project, Task>> tasks = new ArrayList<>();
+    private ProjectGeneratorConfiguration configuration;
 
-
-    private final String defaultModel;
-    private final String defaultPackage;
-    private final String modelDir;
-
-    private final String tmpDir;
-
-    private final List<ProjectGeneratorTask> tasks = new ArrayList<>();
-
-    public ProjectGeneratorImpl(TemplateLoader templateLoader, FileSystem fileSystem, String defaultModel, String defaultPackage, String modelDir, String tmpDir) {
-        this.templateLoader = templateLoader;
+    public ProjectGeneratorImpl(FileSystem fileSystem, ProjectGeneratorConfiguration configuration) {
         this.fileSystem = fileSystem;
-        this.defaultModel = defaultModel;
-        this.defaultPackage = defaultPackage;
-        this.modelDir = modelDir;
-        this.tmpDir = tmpDir;
+        this.configuration = configuration;
     }
 
     @Override
     public Future<Project> generate(Project project) {
         log.debug("Request to run {} tasks to generate project: {}", tasks.size(), project);
         if (project.getModel() == null || project.getModel().isEmpty()) {
-            project.setModel(defaultModel);
+            project.setModel(configuration.getDefaultModel());
         }
-        project.setProjectDir(Paths.get(modelDir).resolve(project.getModel()));
-        project.setOutputDir(Paths.get(tmpDir).resolve(UUID.randomUUID().toString()).resolve(project.getArtifactId()));
+        project.setProjectDir(Paths.get(configuration.getModelDir()).resolve(project.getModel()));
+        project.setOutputDir(Paths.get(configuration.getTmpDir()).resolve(UUID.randomUUID().toString()).resolve(project.getArtifactId()));
 
-        List<Future> futures = tasks.stream().map(task -> task.execute(project)).collect(Collectors.toList());
+        List<Future> futures = tasks
+            .stream()
+            .map(function -> function.apply(project))
+            .map(task -> task.execute())
+            .collect(Collectors.toList());
         return CompositeFuture.all(futures)
             .compose(it -> Future.succeededFuture(project));
     }
 
     @Override
-    public ProjectGenerator copySources() {
-        return copyMainSources();
-//      .copyMainResources()
-//      .copyTestSources();
-//      .copyTestResources();
+    public ProjectGenerator processMainSources() {
+        tasks.add(project -> new ProcessSources(project, fileSystem).sourceSet(project.getMainSourceSet()));
+        return this;
+    }
+
+    @Override
+    public ProjectGenerator processTestSources() {
+        tasks.add(project -> new ProcessSources(project, fileSystem).sourceSet(project.getTestSourceSet()));
+        return this;
     }
 
     @Override
     public ProjectGenerator copyFile(String source, String destination) {
         requireNonNull(source);
         requireNonNull(destination);
-        tasks.add(new CopyFile(fileSystem, source, destination));
+        tasks.add(project -> new CopyFile(project, fileSystem).source(source).destination(destination));
         return this;
     }
 
@@ -79,48 +76,8 @@ public class ProjectGeneratorImpl implements ProjectGenerator {
     public ProjectGenerator render(String template, String destination) {
         requireNonNull(template);
         requireNonNull(destination);
-        tasks.add(new RenderTemplate(templateLoader, fileSystem, template, destination));
+        tasks.add(project -> new Render(project, templateLoader, fileSystem).template(template).destination(destination));
         return this;
     }
 
-    @Override
-    public ProjectGenerator copyMainSources() {
-        tasks.add(new Copy(fileSystem, SourceType.MAIN, defaultPackage));
-        return this;
-    }
-
-    @Override
-    public ProjectGenerator copyMainResources() {
-        new Copy(
-            fileSystem,
-            (String path) -> "",
-            (String content) -> ""
-        );
-        tasks.add(new CopyDirectory(fileSystem, modelDir, SourceType.MAIN));
-        return this;
-    }
-
-    @Override
-    public ProjectGenerator copyTestSources() {
-        tasks.add(new Copy(fileSystem, modelDir, SourceType.TEST, defaultPackage));
-        return this;
-    }
-
-    @Override
-    public ProjectGenerator copyTestResources() {
-        tasks.add(new CopyDirectory(fileSystem, modelDir, SourceType.TEST));
-        return this;
-    }
-
-    @Override
-    public ProjectGenerator processMainSources(Project project) {
-        tasks.add(new Copy(
-            fileSystem,
-            project.getProjectDir(),
-            project.getOutputDir(),
-            (String filename) -> "",
-            (String content) -> content
-        ));
-        return this;
-    }
 }

@@ -1,54 +1,50 @@
 package io.vertx.starter.generator.handler;
 
-import io.vertx.core.Future;
 import io.vertx.core.eventbus.Message;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.starter.generator.engine.ProjectGenerator;
+import io.vertx.starter.generator.model.Build;
 import io.vertx.starter.generator.model.Project;
-import io.vertx.starter.generator.service.ArchiveService;
-import io.vertx.starter.generator.service.ProjectGeneratorService;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
 
 public class ProjectRequestedHandler {
 
     private final Logger log = LoggerFactory.getLogger(ProjectRequestedHandler.class);
 
-    private final String rootDir;
-    private final ProjectGeneratorService projectGeneratorService;
-    private final ArchiveService archiveService;
+    private final ProjectGenerator projectGenerator;
 
-    public ProjectRequestedHandler(String rootDir, ProjectGeneratorService projectGeneratorService, ArchiveService archiveService) {
-        this.rootDir = rootDir;
-        this.projectGeneratorService = projectGeneratorService;
-        this.archiveService = archiveService;
+    public ProjectRequestedHandler(ProjectGenerator projectGenerator) {
+        this.projectGenerator = projectGenerator;
     }
 
     public void handle(Message<JsonObject> message) {
         Project project = message.body().mapTo(Project.class);
-        Path baseDir = Paths.get(rootDir).resolve(UUID.randomUUID().toString());
-        if (project.getModel() == null || project.getModel().isEmpty()) {
-            project.setModel("core");
+        projectGenerator
+            .render("_gitignore", ".gitignore")
+            .copyFile("_editorconfig", ".editorconfig");
+        if (project.getBuild() == Build.MAVEN) {
+            projectGenerator
+                .copyFile("_mvn/wrapper/maven-wrapper.jar", ".mvn/wrapper/maven-wrapper.jar")
+                .copyFile("_mvn/wrapper/maven-wrapper.properties", ".mvn/wrapper/maven-wrapper.properties")
+                .copyFile("mvnw", "mvnw")
+                .copyFile("mvnw.bat", "mvnw.bat")
+                .render("pom.xml", "pom.xml");
         }
-        project.setBaseDir(baseDir);
-        project.setProjectDir();
-        project.setOutputDir(baseDir.resolve(project.getArtifactId()));
+        if (project.getBuild() == Build.GRADLE) {
+            projectGenerator
+                .copyFile("gradle/wrapper/gradle-wrapper.jar", "gradle/wrapper/gradle-wrapper.jar")
+                .copyFile("gradle/wrapper/gradle-wrapper.properties", "gradle/wrapper/gradle-wrapper.properties")
+                .copyFile("gradlew", "gradlew")
+                .copyFile("gradlew.bat", "gradlew.bat")
+                .render("build.gradle", "build.gradle")
+                .render("settings.gradle", "settings.gradle");
+        }
 
-        projectGeneratorService
-            .generate(project)
-            .compose(it -> archiveService.archive(project))
-            .compose(archive -> {
-                project.setArchivePath(((Path) archive).toAbsolutePath().toString());
-                message.reply(JsonObject.mapFrom(project));
-                return Future.succeededFuture();
-            })
-            .otherwise(error -> {
-                log.error("Impossible to generate project: {} because {}", project, error);
-                return Future.failedFuture("Impossible to generate project");
-            });
+        projectGenerator
+            .processMainSources()
+            .processTestSources()
+            .generate(project);
     }
 
 }
