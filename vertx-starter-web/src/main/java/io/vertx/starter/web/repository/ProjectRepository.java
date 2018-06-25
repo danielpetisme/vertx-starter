@@ -1,4 +1,4 @@
-package io.vertx.starter.analytics.repository;
+package io.vertx.starter.web.repository;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;

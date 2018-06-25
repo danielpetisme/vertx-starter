@@ -42,7 +42,7 @@ public class ProjectResource {
   }
 
   private String contentTypeHeader(String format) {
-    if(format.equalsIgnoreCase("zip")) {
+    if (format.equalsIgnoreCase("zip")) {
       return "application/zip";
     }
     return "";

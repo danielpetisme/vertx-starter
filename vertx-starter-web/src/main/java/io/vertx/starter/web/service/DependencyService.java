@@ -33,17 +33,18 @@ public class DependencyService {
 
   private static final Logger log = LoggerFactory.getLogger(DependencyService.class);
 
+  private static final String DEPENDENCIES_PATH = "dependencies.json";
+
   private JsonArray dependencies;
 
-  public DependencyService(String dependenciesPath) {
-    requireNonNull(dependenciesPath);
+  public DependencyService() {
     try {
       String raw = new String(
-        Files.readAllBytes(new File(dependenciesPath).toPath())
+        Files.readAllBytes(new File(DEPENDENCIES_PATH).toPath())
       );
       dependencies = new JsonObject(raw).getJsonArray("content");
     } catch (IOException e) {
-      log.error("Impossible to load dependencies at path {}: {}", dependenciesPath, e.getMessage());
+      log.error("Impossible to load dependencies at path {}: {}", DEPENDENCIES_PATH, e.getMessage());
     }
   }
 

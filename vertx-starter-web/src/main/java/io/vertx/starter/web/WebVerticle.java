@@ -20,9 +20,11 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.ext.web.handler.StaticHandler;
+import io.vertx.starter.web.repository.ProjectRepository;
 import io.vertx.starter.web.rest.DependencyResource;
 import io.vertx.starter.web.rest.ProjectResource;
 import io.vertx.starter.web.rest.VersionResource;
@@ -35,6 +37,10 @@ public class WebVerticle extends AbstractVerticle {
   public static final int DEFAULT_HTTP_PORT = 8080;
   private final Logger log = LoggerFactory.getLogger(WebVerticle.class);
 
+  private MongoClient mongoClient() {
+    return MongoClient.createShared(vertx, config());
+  }
+
   private VersionResource versionResource;
   private DependencyResource dependencyResource;
   private ProjectResource projectResource;
@@ -42,8 +48,8 @@ public class WebVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> startFuture) throws Exception {
     versionResource = new VersionResource(new VersionService());
-    dependencyResource = new DependencyResource(new DependencyService(config().getString("dependencies.path")));
-    projectResource = new ProjectResource(config().getJsonObject("project.request"), new ProjectService(vertx.eventBus()));
+    dependencyResource = new DependencyResource(new DependencyService());
+    projectResource = new ProjectResource(config().getJsonObject("project.request"), new ProjectService(vertx.eventBus(), new ProjectRepository(mongoClient())));
 
     Router router = Router.router(vertx);
     cors(router);
