@@ -10,6 +10,7 @@
 .yardoc
 .yardopts
 .vertx
-vertx-starter-generator/build
+vertx-starter-generator/buildTool
 target
 out
+vertx-starter-generator/buildTool/

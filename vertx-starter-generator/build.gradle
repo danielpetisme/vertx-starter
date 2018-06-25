@@ -1,0 +1,143 @@
+defaultTasks 'generateVertxProject'
+
+
+class VertxProject {
+  def groupId = 'io.vertx'
+  def artifactId = 'example'
+  def vertxVersion = '3.5.0'
+  def language = 'java'
+  def model = 'core'
+  def build = 'maven'
+  def dependencies = ['vertx-core', 'vertx-web']
+
+  def getRootPackage() {
+    "${groupId}.${artifactId}"
+  }
+
+  def getRootPackageDir() {
+    getRootPackage().replaceAll('\\.', File.separator)
+  }
+
+}
+
+def defaultVertxProject = new VertxProject()
+def vertxProject = new VertxProject()
+
+task configureVertxProject {
+
+  doFirst {
+    if (project.hasProperty('groupId')) {
+      vertxProject.groupId = groupId
+    }
+    if (project.hasProperty('artifactId')) {
+      vertxProject.artifactId = artifactId
+    }
+    if (project.hasProperty('vertxVersion')) {
+      vertxProject.vertxVersion = vertxVersion
+    }
+    if (project.hasProperty('language')) {
+      vertxProject.language = language
+    }
+    if (project.hasProperty('model')) {
+      vertxProject.model = model
+    }
+    if (project.hasProperty('build')) {
+      vertxProject.build = build
+    }
+    if (project.hasProperty('dependencies')) {
+      vertxProject.dependencies += dependencies
+    }
+  }
+
+}
+
+task copySources(type: Copy) {
+  from file("projects/${vertxProject.model}")
+  into file("${buildDir}/${vertxProject.artifactId}")
+  include "src/*/${vertxProject.language}/**"
+  includeEmptyDirs = false
+  eachFile { fcp ->
+    //Change package directory
+    println fcp.path
+    fcp.path = fcp.path.replaceAll(defaultVertxProject.getRootPackageDir(), vertxProject.getRootPackageDir())
+    println fcp.path
+  }
+}
+
+task copyResources(type: Copy) {
+  from file("projects/${vertxProject.model}")
+  into file("${buildDir}/${vertxProject.artifactId}")
+  include "src/*/resources/**"
+  includeEmptyDirs = true
+}
+
+//task copyConfigFiles(type: Copy) {
+//  copy {
+//    from file("config")
+//    into buildDir
+//    include "_*"
+//    rename { filename -> filename.replaceAll('_', '\\.') }
+//  }
+//  copy {
+//    from file("config")
+//    into buildDir
+//    exclude "_*"
+//  }
+//}
+
+task configureMaven() {
+  onlyIf {
+    vertxProject.build.equalsIgnoreCase("maven")
+  }
+
+  copy {
+    from "buildTool/maven/pom.xml.tpl"
+    into file("${buildDir}/${vertxProject.artifactId}")
+    rename { filename -> filename.replaceAll('\\.tpl', '') }
+    expand(vertxProject: vertxProject)
+  }
+  copy {
+    from "buildTool/mvnw", "buildTool/mvnw.bat"
+    into file("${buildDir}/${vertxProject.artifactId}")
+  }
+  copy {
+    from "buildTool/_mvn"
+    into file("${buildDir}/${vertxProject.artifactId}/.mvn")
+  }
+}
+
+task configureGradle(type: Copy) {
+  onlyIf {
+    vertxProject.build.equalsIgnoreCase("gradle")
+  }
+  copy {
+    from "build.gradle.tpl", "gradle.settings.tpl", "settings.gradle.tpl"
+    into file("${buildDir}/${vertxProject.artifactId}")
+    rename { filename -> filename.replaceAll('\\.tpl', '') }
+
+  }
+  copy {
+    from "gradlew", "gradlew.bat"
+    into file("${buildDir}/${vertxProject.artifactId}")
+  }
+  copy {
+    from "gradle"
+    into file("${buildDir}/${vertxProject.artifactId}")
+  }
+}
+
+task archive(type: Zip) {
+  from buildDir
+  include "${vertxProject.artifactId}/*"
+  archiveName "${vertxProject.artifactId}.zip"
+  destinationDir buildDir
+}
+
+task configureBuildTool() {
+  dependsOn configureMaven, configureGradle
+}
+
+task generateVertxProject {
+  dependsOn configureVertxProject, copySources, copyResources, configureBuildTool, archive
+
+}
