@@ -21,15 +21,13 @@ import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.starter.analytics.AnalyticsVerticle;
-import io.vertx.starter.generator.GeneratorVerticle;
+import io.vertx.starter.service.GeneratorVerticle;
 import io.vertx.starter.web.WebVerticle;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static io.vertx.core.Future.future;
-import static java.util.Arrays.asList;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -41,7 +39,7 @@ public class MainVerticle extends AbstractVerticle {
     Future<String> generatorFuture = future();
     vertx.deployVerticle(
       GeneratorVerticle.class.getName(),
-      new DeploymentOptions().setConfig(config().getJsonObject("generator")),
+      new DeploymentOptions().setConfig(config().getJsonObject("service")),
       generatorFuture
     );
     futures.add(generatorFuture);
